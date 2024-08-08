@@ -4,17 +4,21 @@
 DAG demonstrates a simple ETL Workflow
 """
 
+import os
 import time
 
 import pendulum
 from airflow import DAG
 from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import BranchPythonOperator, PythonOperator
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.utils.edgemodifier import Label
 
 # Define the basic parameters of the DAG, like schedule and start_date
+# Fetch name from name of file excluding extension
+DAG_ID = os.path.basename(__file__).replace(".py", "")
 with DAG(
-    dag_id="simple_etl",
+    dag_id=DAG_ID,
     start_date=pendulum.datetime(2012, 1, 1, tz="UTC"),
     schedule="0 0 * * 1-5",
     catchup=False,
@@ -29,5 +33,13 @@ with DAG(
     end = EmptyOperator(task_id="End")
     fail = EmptyOperator(task_id="Fail")
 
+    run_simple_etl = TriggerDagRunOperator(
+        task_id="trigger_another_dag",
+        trigger_dag_id="simple_etl",
+        wait_for_completion=False,
+        poke_interval=10,
+        deferrable=False,
+    )
+
     start >> trigger >> monitor >> branch >> Label("Success") >> end
-    branch >> Label("Fail") >> fail
+    branch >> Label("Fail") >> fail >> run_simple_etl

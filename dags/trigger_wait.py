@@ -1,15 +1,11 @@
-"""
-## Simple ETL Flow
-
-DAG demonstrates a simple ETL Workflow
-"""
-
+import os
 import time
 
 import pendulum
 from airflow import DAG
 from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import BranchPythonOperator, PythonOperator
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.utils.edgemodifier import Label
 from airflow.utils.task_group import TaskGroup
 
@@ -31,35 +27,22 @@ def etl_taskgroup(group_id):
     return tg1
 
 
-# Define the basic parameters of the DAG, like schedule and start_date
+# Fetch name from name of file excluding extension
+DAG_ID = os.path.basename(__file__).replace(".py", "")
 with DAG(
-    dag_id="multijob_etl",
+    dag_id=DAG_ID,
     start_date=pendulum.datetime(2012, 1, 1, tz="UTC"),
     schedule="0 0 * * 1-5",
     catchup=False,
     doc_md=__doc__,
-    default_args={"owner": "etl"},
+    default_args={"owner": "etl", "retries": 3},
     tags=["ETL"],
 ):
-    EtlJobA1 = etl_taskgroup("EtlJobA1")
-    EtlJobA2 = etl_taskgroup("EtlJobA2")
-    EtlJobA3 = etl_taskgroup("EtlJobA3")
-    EtlJobB1 = etl_taskgroup("EtlJobB1")
-    EtlJobB2 = etl_taskgroup("EtlJobB2")
-    EtlJobB3 = etl_taskgroup("EtlJobB3")
-    EtlJobC1 = etl_taskgroup("EtlJobC1")
-    EtlJobC2 = etl_taskgroup("EtlJobC2")
-    EtlJobC3 = etl_taskgroup("EtlJobC3")
-
-    (
-        EtlJobA1
-        >> EtlJobA2
-        >> EtlJobA3
-        >> [
-            EtlJobB1,
-            EtlJobB2,
-            EtlJobB3,
-        ]
+    run_simple_etl = TriggerDagRunOperator(
+        task_id="trigger_another_dag",
+        trigger_dag_id="simple_etl",
+        wait_for_completion=True,
+        poke_interval=10,
+        deferrable=True,
     )
-
-    EtlJobA2 >> EtlJobC1 >> EtlJobC2 >> EtlJobC3
+    etl_taskgroup("Job1") >> run_simple_etl >> etl_taskgroup("Job2")

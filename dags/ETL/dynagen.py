@@ -1,9 +1,10 @@
 import json
 import os
 from glob import glob
+from typing import Any, Dict, List
+
 import pendulum
 from airflow.decorators import dag
-from typing import List, Dict, Any
 from airflow.operators.empty import EmptyOperator
 
 JSON_CONFIG_DIR: str = os.path.join(os.getcwd(), "include", "configs", "*.json")
