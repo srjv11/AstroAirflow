@@ -1,3 +1,5 @@
+"""Fetch Github Stars for Airflow as of DAG Run."""
+
 from airflow import DAG
 from airflow.operators.bash import BashOperator
 from airflow.providers.http.operators.http import SimpleHttpOperator
@@ -13,7 +15,11 @@ def _print_stargazers(github_stats: str, date: str):
 
 
 with DAG(
-    "extract_stars", schedule_interval="@daily", start_date=datetime(2022, 1, 1), catchup=False
+    "extract_stars",
+    schedule_interval="@daily",
+    start_date=datetime(2022, 1, 1),
+    catchup=False,
+    doc_md=__doc__,
 ) as dag:
     get_date = BashOperator(task_id="get_date", bash_command="echo {{ ds.format('yyyy') }}")
     query_github_stats = SimpleHttpOperator(
