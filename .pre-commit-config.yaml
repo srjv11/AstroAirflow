@@ -17,3 +17,19 @@ repos:
       args: [ --fix ]
     # Run the formatter.
     - id: ruff-format
+# - repo: local
+#   hooks:
+#     - id: astro-parse
+#       name: astro-parse
+#       entry: astro dev parse
+#       language: system
+#       pass_filenames: false
+#       always_run: true
+# - repo: local
+#   hooks:
+#     - id: astro-pytest
+#       name: astro-pytest-check
+#       entry: astro dev pytest
+#       language: system
+#       pass_filenames: false
+#       always_run: true
