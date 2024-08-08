@@ -34,9 +34,7 @@ def os_getenv_monkeypatch(key: str, *args, **kwargs):
     if args:
         default = args[0]  # os.getenv should get at most 1 arg after the key
     if kwargs:
-        default = kwargs.get(
-            "default", None
-        )  # and sometimes kwarg if people are using the sig
+        default = kwargs.get("default", None)  # and sometimes kwarg if people are using the sig
 
     env_value = os.environ.get(key, None)
 
@@ -69,9 +67,7 @@ _no_default = object()  # allow falsey defaults
 
 
 def variable_get_monkeypatch(key: str, default_var=_no_default, deserialize_json=False):
-    print(
-        f"Attempted to get Variable value during parse, returning a mocked value for {key}"
-    )
+    print(f"Attempted to get Variable value during parse, returning a mocked value for {key}")
 
     if default_var is not _no_default:
         return default_var
