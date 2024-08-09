@@ -8,6 +8,7 @@ from airflow.operators.python import PythonOperator
 
 DATASET_SF_BRONZE = Dataset("snowflake://my_db.BRONZE.my_table")
 DATASET_SF_SILVER = Dataset("snowflake://my_db.SILVER.my_table")
+DATASET_SF_SILVER1 = Dataset("snowflake://my_db.SILVER.my_table2")
 DATASET_SF_GOLD = Dataset("snowflake://my_db.GOLD.my_table")
 DATASET_SF_BI = Dataset("snowflake://my_db.BI.my_table")
 time_asleep = 5
@@ -53,7 +54,7 @@ with DAG(
 ):
     t2 = EmptyOperator(
         task_id="SQLExecuteQueryOperator",
-        outlets=[DATASET_SF_BI],
+        outlets=[DATASET_SF_SILVER1],
     )
     t1 = PythonOperator(task_id="Monitor", python_callable=lambda: time.sleep(time_asleep))
     t1 >> t2
@@ -61,7 +62,8 @@ with DAG(
 
 with DAG(
     dag_id="SilverToGold",
-    schedule=[DATASET_SF_SILVER],
+    # schedule=[DATASET_SF_SILVER, DATASET_SF_SILVER1],
+    schedule=(DATASET_SF_SILVER & DATASET_SF_SILVER1),
     start_date=pendulum.datetime(2024, 8, 1, tz="UTC"),
     tags=["ELTGold", "MedallionArch"],
 ):
